@@ -191,3 +191,4 @@ ContextStoreAgent
 com.apple.hiservices-xpcservice
 talagent
 WindowServer
+com.apple.appkit.xpc.openAndSavePanelService
