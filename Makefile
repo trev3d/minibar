@@ -32,30 +32,21 @@ PUBLIC_FRAMEWORKS = -framework Foundation -framework AppKit -framework QuartzCor
     -framework CoreFoundation
 
 # Project name and paths
-PROJECT = apple_sharpener
-DYLIB_NAME = lib$(PROJECT).dylib
-CLI_NAME = sharpener
+PROJECT = minibar
+DYLIB_NAME = $(PROJECT).dylib
 BUILD_DIR = build
 SOURCE_DIR = src
 INSTALL_DIR = /var/ammonia/core/tweaks
-CLI_INSTALL_DIR = /usr/local/bin
 
 # Source files
-DYLIB_SOURCES = $(SOURCE_DIR)/sharpener/sharpener.m \
-                $(SOURCE_DIR)/sharpener/Windows/window.m \
-                $(SOURCE_DIR)/sharpener/Dock/dock.m \
+DYLIB_SOURCES = $(SOURCE_DIR)/minibar.m \
                 ZKSwizzle/ZKSwizzle.m
 DYLIB_OBJECTS = $(DYLIB_SOURCES:%.m=$(BUILD_DIR)/%.o)
 
-# CLI tool source and object
-CLI_SOURCE = $(SOURCE_DIR)/sharpener/clitool.m
-CLI_OBJECT = $(BUILD_DIR)/sharpener/clitool.o
-
 # Installation targets
 INSTALL_PATH = $(INSTALL_DIR)/$(DYLIB_NAME)
-CLI_INSTALL_PATH = $(CLI_INSTALL_DIR)/$(CLI_NAME)
-BLACKLIST_SOURCE = lib$(PROJECT).dylib.blacklist
-BLACKLIST_DEST = $(INSTALL_DIR)/lib$(PROJECT).dylib.blacklist
+BLACKLIST_SOURCE = $(PROJECT).dylib.blacklist
+BLACKLIST_DEST = $(INSTALL_DIR)/$(PROJECT).dylib.blacklist
 
 # Dylib settings
 DYLIB_FLAGS = -dynamiclib \
@@ -64,14 +55,14 @@ DYLIB_FLAGS = -dynamiclib \
               -current_version 1.0.0
 
 # Default target
-all: clean $(BUILD_DIR)/$(DYLIB_NAME) $(BUILD_DIR)/$(CLI_NAME) ## Build dylib and CLI
+all: clean $(BUILD_DIR)/$(DYLIB_NAME)
 
 # Create build directory and subdirectories
 $(BUILD_DIR):
 	@rm -rf $(BUILD_DIR)
 	@mkdir -p $(BUILD_DIR)
 	@mkdir -p $(BUILD_DIR)/ZKSwizzle
-	@mkdir -p $(BUILD_DIR)/src/sharpener
+	@mkdir -p $(BUILD_DIR)/src
 
 # Compile source files
 $(BUILD_DIR)/%.o: %.m | $(BUILD_DIR)
@@ -86,32 +77,20 @@ $(BUILD_DIR)/$(DYLIB_NAME): $(DYLIB_OBJECTS)
 	$(PUBLIC_FRAMEWORKS) \
 	-L$(SDKROOT)/usr/lib
 
-# Build CLI tool (updated to avoid linking UI frameworks)
-$(BUILD_DIR)/$(CLI_NAME): $(CLI_SOURCE)
-	@rm -f $(BUILD_DIR)/$(CLI_NAME)
-	$(CC) $(CFLAGS) $(ARCHS) $(CLI_SOURCE) \
-		-DAPPLE_SHARPENER_VERSION="\"$(shell cat VERSION)\"" \
-		-framework Foundation \
-		-framework CoreFoundation \
-		-o $@
-
-# Install both dylib and CLI tool
-install: $(BUILD_DIR)/$(DYLIB_NAME) $(BUILD_DIR)/$(CLI_NAME) ## Install dylib and CLI to system
-	@echo "Installing dylib to $(INSTALL_DIR) and CLI tool to $(CLI_INSTALL_DIR)"
+# Install dylib
+install: $(BUILD_DIR)/$(DYLIB_NAME)
+	@echo "Installing dylib to $(INSTALL_DIR)
 	# Create the target directories.
 	sudo mkdir -p $(INSTALL_DIR)
-	sudo mkdir -p $(CLI_INSTALL_DIR)
 	# Install the tweak's dylib where injection takes place.
 	sudo install -m 755 $(BUILD_DIR)/$(DYLIB_NAME) $(INSTALL_DIR)
-	# Install the CLI tool separately so it will not have DYLD_INSERT_LIBRARIES set.
-	sudo install -m 755 $(BUILD_DIR)/$(CLI_NAME) $(CLI_INSTALL_DIR)
 	@if [ -f $(BLACKLIST_SOURCE) ]; then \
 		sudo cp $(BLACKLIST_SOURCE) $(BLACKLIST_DEST); \
 		sudo chmod 644 $(BLACKLIST_DEST); \
-		echo "Installed $(DYLIB_NAME), $(CLI_NAME), and blacklist"; \
+		echo "Installed $(DYLIB_NAME) and blacklist"; \
 	else \
 		echo "Warning: $(BLACKLIST_SOURCE) not found"; \
-		echo "Installed $(DYLIB_NAME) and $(CLI_NAME)"; \
+		echo "Installed $(DYLIB_NAME)"; \
 	fi
 
 # Test target that builds, installs, and relaunches test applications
@@ -149,19 +128,17 @@ delete: ## Delete installed files and relaunch Finder
 	@pkill -9 "Dock" 2>/dev/null || true
 	@sleep 2 && open -a "Finder" || true
 	@sudo rm -f $(INSTALL_PATH)
-	@sudo rm -f $(CLI_INSTALL_PATH)
 	@sudo rm -f $(BLACKLIST_DEST)
-	@echo "Deleted $(DYLIB_NAME), $(CLI_NAME), and blacklist from $(INSTALL_DIR)"
+	@echo "Deleted $(DYLIB_NAME) and blacklist from $(INSTALL_DIR)"
 
 # Uninstall
-uninstall: ## Uninstall dylib, CLI, and blacklist
+uninstall: ## Uninstall dylib and blacklist
 	@sudo rm -f $(INSTALL_PATH)
-	@sudo rm -f $(CLI_INSTALL_PATH)
 	@sudo rm -f $(BLACKLIST_DEST)
-	@echo "Uninstalled $(DYLIB_NAME), $(CLI_NAME), and blacklist"
+	@echo "Uninstalled $(DYLIB_NAME) and blacklist"
 
 installer: ## Create a .pkg installer
-	@echo "Packaging Apple Sharpener into a .pkg installer"
+	@echo "Packaging into an installer"
 	./scripts/create_installer.sh
 
 help: ## Show this help

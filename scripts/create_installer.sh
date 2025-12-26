@@ -6,10 +6,10 @@ REPO_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
 
 # Version - read from VERSION file
 VERSION=$(cat "$REPO_ROOT/VERSION")
-PKG_NAME="apple-sharpener-${VERSION}.pkg"
+PROJ_NAME="minibar"
+PKG_NAME="${PROJ_NAME}-${VERSION}.pkg"
 CHANGELOG_FILE="$REPO_ROOT/CHANGELOG.md"
-BUILD_FILE="$REPO_ROOT/build/libapple_sharpener.dylib"
-CLI_BUILD_FILE="$REPO_ROOT/build/sharpener"
+BUILD_FILE="$REPO_ROOT/build/${PROJ_NAME}.dylib"
 
 # Change to repository root
 cd "$REPO_ROOT"
@@ -22,7 +22,7 @@ if [ -f "$CHANGELOG_FILE" ] && grep -q "## \[${VERSION}\]" "$CHANGELOG_FILE"; th
 fi
 
 # Check if build exists, if not, run make
-if [ ! -f "$BUILD_FILE" ] || [ ! -f "$CLI_BUILD_FILE" ]; then
+if [ ! -f "$BUILD_FILE" ]; then
     echo "Build not found. Running make..."
     if ! make; then
         echo "Error: Build failed"
@@ -45,16 +45,8 @@ if ! cp "$BUILD_FILE" "$PAYLOAD_DIR/var/ammonia/core/tweaks/"; then
     exit 1
 fi
 
-if ! cp libapple_sharpener.dylib.blacklist "$PAYLOAD_DIR/var/ammonia/core/tweaks/"; then
+if ! cp ${PROJ_NAME}.dylib.blacklist "$PAYLOAD_DIR/var/ammonia/core/tweaks/"; then
     echo "Error: Failed to copy blacklist"
-    rm -rf "$TEMP_DIR"
-    exit 1
-fi
-
-# Copy CLI to /usr/local/bin
-mkdir -p "$PAYLOAD_DIR/usr/local/bin"
-if ! cp "$CLI_BUILD_FILE" "$PAYLOAD_DIR/usr/local/bin/"; then
-    echo "Error: Failed to copy CLI"
     rm -rf "$TEMP_DIR"
     exit 1
 fi
@@ -77,7 +69,7 @@ chmod +x "$SCRIPTS_DIR/postinstall"
 # Build package
 pkgbuild --root "$PAYLOAD_DIR" \
          --scripts "$SCRIPTS_DIR" \
-         --identifier com.aspauldingcode.apple-sharpener \
+         --identifier com.trev3d.minibar \
          --version "$VERSION" \
          --install-location "/" \
          "$PKG_NAME"
