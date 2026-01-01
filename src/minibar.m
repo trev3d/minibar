@@ -1,46 +1,22 @@
-//
-//  MEMiniMe.m
-//  Created by Wolfgang Baird on 12/22/20.
-//  Copyright © 2020 Wolfgang Baird. All rights reserved.
-//
-
-#import "ZKSwizzle.h"
 #import <Cocoa/Cocoa.h>
 
-@interface minibar : NSObject @end
-@interface miniTitle : NSWindow @end
+@interface minibar : NSToolbar @end
 
 @implementation minibar
 
 + (void)load {
-    ZKSwizzle(miniTitle, NSWindow);
+    [[NSNotificationCenter defaultCenter] addObserver:self
+        selector:@selector(applyCompact:)
+        name:NSWindowDidBecomeMainNotification object:nil];
+}
 
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.5 * NSEC_PER_SEC),
-                   dispatch_get_main_queue(), ^{
-        for (NSWindow *w in NSApp.windows) {
-            if (w.toolbarStyle != NSWindowToolbarStyleUnifiedCompact)
-                [w setToolbarStyle:NSWindowToolbarStyleUnifiedCompact];
-        }
-    });
++ (void)applyCompact:(NSNotification *)n {
+    NSWindow *w = n.object;
+
+    if (!w.toolbar) return;
+    if (![w isKindOfClass:[NSWindow class]]) return;
+
+    [w setToolbarStyle:NSWindowToolbarStyleUnifiedCompact];
 }
 
 @end
-
-@implementation miniTitle
-
-- (void)setToolbarStyle:(NSWindowToolbarStyle)toolbarStyle {
-    ZKOrig(void, NSWindowToolbarStyleUnifiedCompact);
-}
-
-- (void)display {
-    if (self.toolbarStyle != NSWindowToolbarStyleUnifiedCompact) [self setToolbarStyle:NSWindowToolbarStyleUnifiedCompact];
-    ZKOrig(void);
-}
-
-- (BOOL)makeFirstResponder:(NSResponder *)responder {
-    if (self.toolbarStyle != NSWindowToolbarStyleUnifiedCompact) [self setToolbarStyle:NSWindowToolbarStyleUnifiedCompact];
-    return ZKOrig(BOOL, responder);
-}
-
-@end
-

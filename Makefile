@@ -23,8 +23,7 @@ CFLAGS = -Wall -Wextra -O2 \
     -fobjc-arc \
     -isysroot $(SDKROOT) \
     -iframework $(SDKROOT)/System/Library/Frameworks \
-    -F/System/Library/PrivateFrameworks \
-    -IZKSwizzle
+    -F/System/Library/PrivateFrameworks
 ARCHS = -arch x86_64 -arch arm64 -arch arm64e
 FRAMEWORK_PATH = $(SDKROOT)/System/Library/Frameworks
 PRIVATE_FRAMEWORK_PATH = $(SDKROOT)/System/Library/PrivateFrameworks
@@ -39,8 +38,7 @@ SOURCE_DIR = src
 INSTALL_DIR = /var/ammonia/core/tweaks
 
 # Source files
-DYLIB_SOURCES = $(SOURCE_DIR)/minibar.m \
-                ZKSwizzle/ZKSwizzle.m
+DYLIB_SOURCES = $(SOURCE_DIR)/minibar.m
 DYLIB_OBJECTS = $(DYLIB_SOURCES:%.m=$(BUILD_DIR)/%.o)
 
 # Installation targets
@@ -61,7 +59,6 @@ all: clean $(BUILD_DIR)/$(DYLIB_NAME)
 $(BUILD_DIR):
 	@rm -rf $(BUILD_DIR)
 	@mkdir -p $(BUILD_DIR)
-	@mkdir -p $(BUILD_DIR)/ZKSwizzle
 	@mkdir -p $(BUILD_DIR)/src
 
 # Compile source files
